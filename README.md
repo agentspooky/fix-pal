@@ -2,7 +2,8 @@
 
 Slow down a Matroska-contained movie to correct for PAL speedup.
 
-In regions that historically used the PAL television standard, films shot at 24
+In regions that historically used the
+[PAL television standard](https://en.wikipedia.org/wiki/PAL), films shot at 24
 frames per second (fps) were converted for television (including VHS and DVD)
 at 25 fps, resulting in a 4% speedup with audio pitched up by nearly a
 semitone. This problem generally does not affect newer digital formats (e.g.
