@@ -15,13 +15,13 @@ audio_factor=`bc -l <<< "1/($CORRECTION_FACTOR)"`
 # Source & dest files
 infile=$1
 outfile=$2
-tmpdir=$(mktemp -d "${TMPDIR:-/var/tmp}/pal-XXXXXXXX")
+tmpdir=$(mktemp -d "${TMPDIR:-/var/tmp}/pal-XXXXXXXX") # Thanks to James Ainslie
 tempfile=${tmpdir}/temp.mkv
 
 # Clean up the temp directory
 function cleanup {
 	echo "Cleaning up temp files..."
-	rm -rf "${tmpdir}"
+	rm -rf "${tmpdir}" # Thanks to James Ainslie
 }
 
 # If a given file already exists, ask for confirmation before proceeding.
