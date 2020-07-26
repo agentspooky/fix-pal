@@ -14,7 +14,7 @@ movie!) Learn more about PAL speedup
 
 This script forces a framerate change to the video track(s), avoiding
 re-encoding and leaving the underlying data alone. Audio tracks' sample rates
-are also reduced by the same rate, fixing the pitch issue and ensuring audio
+are also reduced by the same factor, fixing the pitch issue and ensuring audio
 and video remain in sync. Subtitles and chapters are re-timed to match.
 
 I prefer this solution to re-encoding, as the latter adds the possibility of
