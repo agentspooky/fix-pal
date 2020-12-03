@@ -9,8 +9,16 @@
 # If interrupted with CTRL+C, do cleanup
 trap cleanup INT
 
+USAGE="usage: $0 <infile> <outfile>"
+
 CORRECTION_FACTOR=25/24
 audio_factor=`bc -l <<< "1/($CORRECTION_FACTOR)"`
+
+# Validate args
+if [ $# -ne 2 ]; then
+	echo ${USAGE}
+	exit
+fi
 
 # Source & dest files
 infile=$1
@@ -72,13 +80,15 @@ function edit_timings {
 # <https://blog.delx.net.au/2016/05/fixing-pal-speedup-and-how-film-and-video-work/comment-page-1/#comment-100160>
 function fix_chapters {
 	echo "Adjusting chapters..."
-	if [[ 'mkvmerge -i "${infile}" | grep Chapters' ]]; then
+	if mkvmerge -i "${infile}" | grep --quiet Chapters ; then
 		old_chapter_file="${tmpdir}/oldChapters.xml"
 		new_chapter_file="${tmpdir}/newChapters.xml"
 		mkvextract $infile chapters $old_chapter_file
 		edit_timings $old_chapter_file $new_chapter_file $CORRECTION_FACTOR
+		chapter_string="--chapters ${new_chapter_file}"
 	else
 		echo "No chapters found."
+		chapter_string=""
 	fi
 }
 
@@ -93,7 +103,7 @@ function get_sync_flags {
 			local track_id=$(echo $match | egrep -o -m1 "\d+:" | cat)
 			syncstring="$syncstring --sync ${track_id}0,${CORRECTION_FACTOR}"
 		fi
-	done <<<"$(mkvmerge --identify $file)"
+	done <<<"$(mkvmerge -i $file)"
 }
 
 # Determine the sample rate for audio. If different tracks have different
@@ -121,7 +131,7 @@ get_sync_flags $infile
 # For each video track, adjust the framerate by the correction factor. (No
 # re-encoding necessary!) Adjust subtitle timings to match. Add the adjusted
 # chapters from the new chapter file. Write everything to a temp file.
-mkvmerge --output $tempfile $syncstring --no-chapters --chapters $new_chapter_file $infile
+mkvmerge --output $tempfile $syncstring --no-chapters $chapter_string $infile
 
 fix_audio
 cleanup
