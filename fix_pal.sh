@@ -121,7 +121,7 @@ function fix_audio {
 
 	ffmpeg -y -i $tempfile -map 0 \
 	-filter:a "asetrate=${audio_sample_rate}*${audio_factor}" \
-	-c:v copy -c:s copy -max_interleave_delta 0 $outfile
+	-c:v copy -c:s copy -c:a libvorbis -q:a 6 -max_interleave_delta 0 $outfile
 }
 
 confirm_overwrite $outfile
