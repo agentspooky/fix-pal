@@ -100,7 +100,7 @@ function get_sync_flags {
 	while IFS= read line || [[ -n $line ]]; do
 		local match=$(echo $line | grep 'Track ID' | grep -v 'audio' | cat)
 		if [ "$match" ]; then
-			local track_id=$(echo $match | egrep -o -m1 "\d+:" | cat)
+			local track_id=$(echo $match | egrep -o -m1 "[0-9]*:" | cat)
 			syncstring="$syncstring --sync ${track_id}0,${CORRECTION_FACTOR}"
 		fi
 	done <<<"$(mkvmerge -i $file)"
@@ -111,7 +111,7 @@ function get_sync_flags {
 function get_audio_sample_rate {
 	local file=$1
 	sample_rates=$(mkvinfo $file | grep -m1 "Sampling frequency")
-	audio_sample_rate=$(echo $sample_rates | egrep -o '\d+\.\d*')
+	audio_sample_rate=$(echo $sample_rates | egrep -o "[0-9]*\.[0-9]*")
 }
 
 # Alter the audio sample rate. Copy video, subtitles, chapters exactly as they
