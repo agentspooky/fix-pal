@@ -10,37 +10,31 @@
 # If interrupted with CTRL+C, do cleanup
 trap cleanup INT
 
+
 USAGE="usage: $0 <infile> <outfile>"
-
 CORRECTION_FACTOR=25/24
-audio_factor=`bc -l <<< "1/($CORRECTION_FACTOR)"`
-
-
-# Validate args
-if [ $# -ne 2 ]; then
-	echo ${USAGE}
-	exit
-fi
-
-
-# Source & dest files
-infile=$1
-outfile=$2
-tmpdir=$(mktemp -d "${TMPDIR:-/var/tmp}/pal-XXXXXXXX") # Thanks to James Ainslie
-tempfile=${tmpdir}/temp.mkv
 
 
 # Clean up the temp directory
 function cleanup {
 	echo "Cleaning up temp files..."
-	rm -rf "${tmpdir}" # Thanks to James Ainslie
+	rm -rf "$tmpdir" # Thanks to James Ainslie
+}
+
+
+# Check whether a file exists. If it doesn't, complain & stop.
+function check_exists {
+	if [ ! -e "$1" ]; then
+		echo "Input file $1 does not exist. Stopping."
+		exit
+	fi
 }
 
 
 # If two files are the same, stop.
 # TODO: check for different paths pointing to the same file (e.g. relative vs absolute)
 function check_diff {
-	if [ $1 = $2 ]; then
+	if [ "$1" = "$2" ]; then
 		echo 'Input and output files are the same. Stopping.'
 		exit
 	fi
@@ -49,8 +43,7 @@ function check_diff {
 
 # If a given file already exists, ask for confirmation before proceeding.
 function confirm_overwrite {
-	local file=$1
-	if [ -e $file ]; then
+	if [ -e "$1" ]; then
 		read -p "Output file \`$1\` already exists.
 Do you want to overwrite it? [y|N] " yn
 		case $yn in
@@ -97,12 +90,12 @@ function edit_timings {
 # <https://blog.delx.net.au/2016/05/fixing-pal-speedup-and-how-film-and-video-work/comment-page-1/#comment-100160>
 function fix_chapters {
 	echo "Adjusting chapters..."
-	if mkvmerge -i "${infile}" | grep --quiet Chapters ; then
-		old_chapter_file="${tmpdir}/oldChapters.xml"
-		new_chapter_file="${tmpdir}/newChapters.xml"
-		mkvextract $infile chapters $old_chapter_file
+	if mkvmerge -i "$infile" | grep --quiet Chapters ; then
+		local old_chapter_file="${tmpdir}/oldChapters.xml"
+		local new_chapter_file="${tmpdir}/newChapters.xml"
+		mkvextract "$infile" chapters $old_chapter_file
 		edit_timings $old_chapter_file $new_chapter_file $CORRECTION_FACTOR
-		chapter_string="--chapters ${new_chapter_file}"
+		chapter_string="--chapters $new_chapter_file"
 	else
 		echo "No chapters found."
 		chapter_string=""
@@ -113,23 +106,23 @@ function fix_chapters {
 # Get all tracks that AREN'T AUDIO (e.g. video and subtitle tracks), then build
 # the `--sync` string for a subsequent `mkvmerge` call.
 function get_sync_flags {
-	local file=$1
 	syncstring=''
-	while IFS= read line || [[ -n $line ]]; do
+	while IFS= read -r line || [[ -n $line ]]; do
 		local match=$(echo $line | grep 'Track ID' | grep -v 'audio' | cat)
 		if [ "$match" ]; then
 			local track_id=$(echo $match | egrep -o -m1 "[0-9]+:" | cat)
 			syncstring="$syncstring --sync ${track_id}0,${CORRECTION_FACTOR}"
 		fi
-	done <<<"$(mkvmerge -i $file)"
+	done <<<"$(mkvmerge -i "$1")"
 }
 
 
 # Determine the sample rate for audio. If different tracks have different
 # rates, choose that of the first audio track.
+# TODO: construct args that handle all audio files individually, as in
+# `get_sync_flags` above.
 function get_audio_sample_rate {
-	local file=$1
-	sample_rates=$(mkvinfo $file | grep -m1 "Sampling frequency")
+	sample_rates=$(mkvinfo "$1" | grep -m1 "Sampling frequency")
 	audio_sample_rate=$(echo $sample_rates | egrep -o "[0-9]+\.?[0-9]*")
 }
 
@@ -137,25 +130,40 @@ function get_audio_sample_rate {
 # Alter the audio sample rate. Copy video, subtitles, chapters exactly as they
 # are in the temp file.
 function fix_audio {
-	get_audio_sample_rate $infile
+	get_audio_sample_rate "$infile"
 
 	ffmpeg -y -i $tempfile -map 0 \
 	-filter:a "asetrate=${audio_sample_rate}*${audio_factor}" \
-	-c:v copy -c:s copy -max_interleave_delta 0 $outfile
+	-c:v copy -c:s copy -max_interleave_delta 0 "$outfile"
 }
 
 
 # Zhu Li, do the thing!
 
-check_diff $infile $outfile
-confirm_overwrite $outfile
+# Validate args
+if [ $# -ne 2 ]; then
+	echo $USAGE
+	exit
+fi
+
+infile=$1
+outfile=$2
+
+check_exists "$infile"
+check_diff "$infile" "$outfile"
+confirm_overwrite "$outfile"
+
+tmpdir=$(mktemp -d "${TMPDIR:-/var/tmp}/pal-XXXXXXXX") # Thanks to James Ainslie
+tempfile=${tmpdir}/temp.mkv
+audio_factor=`bc -l <<< "1/($CORRECTION_FACTOR)"`
+
 fix_chapters
-get_sync_flags $infile
+get_sync_flags "$infile"
 
 # For each video track, adjust the framerate by the correction factor. (No
 # re-encoding necessary!) Adjust subtitle timings to match. Add the adjusted
 # chapters from the new chapter file. Write everything to a temp file.
-mkvmerge --output $tempfile $syncstring --no-chapters $chapter_string $infile
+mkvmerge --output $tempfile $syncstring --no-chapters $chapter_string "$infile"
 
 fix_audio # This is the part that takes forever...
 cleanup
