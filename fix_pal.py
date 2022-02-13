@@ -89,7 +89,7 @@ def check_exists(path):
 
 
 def confirm_overwrite(path):
-	"""Prompt the user to cofirm overwriting a file at a given path.
+	"""Prompt the user to confirm overwriting a file at a given path.
 
 	If the user does not confirm, quit."""
 	path = Path(path)
