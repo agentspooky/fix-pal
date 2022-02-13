@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Slow down a Matroska-contained movie to correct for PAL speedup.
+# Slow down a Matroska-contained video to correct for PAL speedup.
 #
 # usage: $SCRIPT_NAME <infile> <outfile>
 #
