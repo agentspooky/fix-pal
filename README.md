@@ -29,5 +29,3 @@ Portions of this script were adapted from code posted by James Ainslie
 Prerequesites:
 - [MKVToolNix](https://mkvtoolnix.download)
 - [FFmpeg](https://ffmpeg.org)
-
-usage: `./fix_pal.sh <infile> <outfile>`
