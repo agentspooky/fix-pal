@@ -8,7 +8,7 @@ Slow down a Matroska-contained video to correct for PAL speedup.
 
 
 __author__ = 'Jack Fisher'
-__credits__ = ['Jack Fisher', 'James Ainsley']
+__credits__ = ['Jack Fisher', 'James Ainsley', 'BlackScreen']
 __version__ = '2.0'
 
 
@@ -91,8 +91,8 @@ def check_exists(path):
 def confirm_overwrite(path):
 	"""Prompt the user to confirm overwriting a file at a given path.
 
-	If the user does not confirm, quit."""
-	path = Path(path)
+	If the user does not confirm, or if the path points to a directory, quit."""
+	path = Path(path)  # oops I did it again
 	if Path.exists(path):
 		if Path.is_dir(path):
 			sys.exit('Error: output path is a directory!')
@@ -142,11 +142,10 @@ def edit_timecodes(infile, outfile):
 	This function inspired by code by James Ainslie from
 	<https://blog.delx.net.au/2016/05/fixing-pal-speedup-and-how-film-and-video-work/comment-page-1/#comment-100160>"""
 	pattern = r'\d{2}:\d{2}:\d{2}.\d+'
-	with open(infile, 'r') as inf:
-		with open(outfile, 'w') as outf:
-			for line in inf:
-				fixed_line = re.sub(pattern, adjust_timestamp, line)
-				outf.write(fixed_line)
+	with open(infile, 'r') as inf, open(outfile, 'w') as outf:
+		for line in inf:
+			fixed_line = re.sub(pattern, adjust_timestamp, line)
+			outf.write(fixed_line)
 
 
 def fix_chapters(infile, tmpdir):
@@ -159,8 +158,8 @@ def fix_chapters(infile, tmpdir):
 	if 'Chapters'.casefold() not in stdout.casefold():
 		return ''
 
-	old_chapter_file = tmpdir + '/oldChapters.xml'
-	new_chapter_file = tmpdir + '/newChapters.xml'
+	old_chapter_file = tmpdir + '/hello-old-chap.xml'  # couldn't help it
+	new_chapter_file = tmpdir + '/hello-new-chap.xml'
 	subprocess.run([tools['mkvextract'], infile, 'chapters', old_chapter_file])
 	edit_timecodes(old_chapter_file, new_chapter_file)
 	return ['--chapters', new_chapter_file]
@@ -186,7 +185,7 @@ def get_audio_sample_rate(file):
 	"""Determine the sample rate for audio.
 
 	If different tracks have different rates, choose that of the first audio
-	track."""
+	track (technically, the first CHANNEL of the first audio track)."""
 	cmd = [tools['mkvinfo'], file]
 	stdout = subprocess.run(cmd, text=True, capture_output=True).stdout
 	pattern = r'\d+\.?\d*'
@@ -196,7 +195,7 @@ def get_audio_sample_rate(file):
 
 
 def fix_audio(infile, outfile):
-	"""Alter the audio sample rate.
+	"""Slow down the audio and re-sample at the original sample rate.
 
 	Copy video, subtitles, chapters exactly as they are in the input file."""
 	audio_factor = 1/Fraction(CORRECTION_FACTOR)
@@ -218,7 +217,6 @@ def main():
 		# Get some info from the source file and build some of our args for the
 		# mkvmerge call
 		chapter_args = fix_chapters(infile, tmpdir)
-
 		sync_args = get_sync_flags(infile)
 
 		# For each video track, adjust the framerate by the correction factor.

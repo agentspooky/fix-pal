@@ -13,15 +13,17 @@ movie!) Learn more about PAL speedup
 [here](https://en.wikipedia.org/wiki/576i#PAL_speed-up).
 
 This script forces a framerate change to the video track(s), avoiding
-re-encoding and leaving the underlying data alone. Audio tracks' sample rates
-are also reduced by the same factor, fixing the pitch issue and ensuring audio
-and video remain in sync. Subtitles and chapters are re-timed to match.
+re-encoding and leaving the underlying data alone. Audio tracks are slowed to
+match and re-sampled at their original sample rates, fixing the pitch issue and
+ensuring audio and video remain in sync. Subtitles and chapters are re-timed to
+match.
 
-I prefer this solution to re-encoding, as the latter adds the possibility of
-quality loss. The resulting framerate will almost always be nonstandard, but
-capable video players (e.g. [VLC](https://www.videolan.org/vlc/index.html))
+I prefer this solution to re-encoding the entire video, as the latter adds the
+possibility of quality loss. The resulting framerate will almost always be
+nonstandard, but capable video players (e.g. [VLC](https://www.videolan.org/vlc/index.html))
 have no issue with this -- and there is no excuse in this day and age for video
-players not to support arbitrary framerates.
+players not to support arbitrary framerates. (Resampling audio is unfortunately
+unavoidable, since many audio formats only support a small set of sample rates.)
 
 Portions of this script were adapted from code posted by James Ainslie
 [here](https://blog.delx.net.au/2016/05/fixing-pal-speedup-and-how-film-and-video-work/comment-page-1/#comment-100160). These portions are marked.
