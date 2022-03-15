@@ -179,7 +179,7 @@ def get_sync_flags(infile):
 	return sync_args
 
 
-# TODO: construct args that handle all audio files individually, as in
+# TODO: construct args that handle audio tracks individually, as in
 # `get_sync_flags` above.
 def get_audio_sample_rate(file):
 	"""Determine the sample rate for audio.
