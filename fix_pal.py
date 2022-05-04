@@ -56,14 +56,13 @@ def check_prereqs():
 	if len(missing_tools) > 0:
 		msg = 'Error: the following utilities are missing from your system:'
 		for tool in missing_tools:
-			msg += '\n\t{}'.format(tool)
+			msg += f'\n\t{tool}'
 		msg += '\nPlease install them in order to use this script.'
 		sys.exit(msg)
 
 
 def handle_args():
 	"""Basic arg handling"""
-	global args
 	parser = argparse.ArgumentParser(description=__doc__,
 		formatter_class=argparse.RawDescriptionHelpFormatter)
 	parser.add_argument(
@@ -97,7 +96,7 @@ def confirm_overwrite(path):
 		if Path.is_dir(path):
 			sys.exit('Error: output path is a directory!')
 
-		query = ('Output file `{}` already exists.\n'.format(path)
+		query = (f'Output file `{path}` already exists.\n'
 			+ 'Do you want to overwrite it? [y|N] ')
 		proceed = input(query)
 		if proceed.casefold() != 'y'.casefold():
@@ -175,7 +174,7 @@ def get_sync_flags(infile):
 		if "Track ID".casefold() in line.casefold():
 			if "audio".casefold() not in line.casefold():
 				track_id = re.search(pattern, line).group(0)
-				sync_args.extend(['--sync', '{}:0,{}'.format(track_id, CORRECTION_FACTOR)])
+				sync_args.extend(['--sync', f'{track_id}:0,{CORRECTION_FACTOR}'])
 	return sync_args
 
 
@@ -202,8 +201,8 @@ def fix_audio(infile, outfile):
 	sample_rate = get_audio_sample_rate(infile)
 
 	cmd = [tools['ffmpeg'], '-y', '-i', infile, '-map', '0', '-filter:a',
-		'asetrate={}*{}'.format(sample_rate, audio_factor), '-c:v', 'copy',
-		'-c:s', 'copy', '-max_interleave_delta', '0', outfile]
+		f'asetrate={sample_rate}*{audio_factor}', '-c:v', 'copy', '-c:s',
+		'copy', '-max_interleave_delta', '0', outfile]
 	subprocess.run(cmd)
 
 
