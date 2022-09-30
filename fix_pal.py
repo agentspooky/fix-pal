@@ -68,11 +68,11 @@ def handle_args():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(dest='infile',
-        metavar='input_file',
-        help='The file to be processed.')
+                        metavar='input_file',
+                        help='The file to be processed.')
     parser.add_argument(dest='outfile',
-        metavar='output_file',
-        help='The filename for the new, processed file.')
+                        metavar='output_file',
+                        help='The filename for the new, processed file.')
     return parser.parse_args()
 
 
