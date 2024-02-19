@@ -28,6 +28,7 @@ unavoidable, since many audio formats only support a small set of sample rates.)
 Portions of this script were adapted from code posted by James Ainslie
 [here](https://blog.delx.net.au/2016/05/fixing-pal-speedup-and-how-film-and-video-work/comment-page-1/#comment-100160). These portions are marked.
 
-Prerequesites:
+## Prerequesites
+
 - [MKVToolNix](https://mkvtoolnix.download)
 - [FFmpeg](https://ffmpeg.org)
