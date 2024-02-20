@@ -44,8 +44,7 @@ def check_prereqs():
     global tools
     missing_tools = []
     for tool in tools:
-        path = which(tool)
-        if not path:
+        if not (path := which(tool)):
             missing_tools.append(tool)
         else:
             tools[tool] = path
